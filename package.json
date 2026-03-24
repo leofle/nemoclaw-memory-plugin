@@ -1,0 +1,16 @@
+{
+  "name": "@nemoclaw/memory-plugin",
+  "version": "0.1.0",
+  "description": "Open-source long-term memory plugin for NemoClaw/OpenClaw agents",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "lint": "node --check src/*.js test/*.js"
+  },
+  "keywords": ["nemoclaw", "openclaw", "memory", "ai-agent", "plugin"],
+  "license": "MIT"
+}
