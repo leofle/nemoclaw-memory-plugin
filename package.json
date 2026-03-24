@@ -3,14 +3,30 @@
   "version": "0.1.0",
   "description": "Open-source long-term memory plugin for NemoClaw/OpenClaw agents",
   "type": "module",
-  "main": "src/index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
-    ".": "./src/index.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "scripts": {
-    "test": "node --test",
-    "lint": "node --check src/*.js test/*.js"
+    "build": "tsc",
+    "test": "node --import tsx/esm --test test/memory-plugin.test.ts",
+    "lint": "tsc --noEmit"
   },
-  "keywords": ["nemoclaw", "openclaw", "memory", "ai-agent", "plugin"],
-  "license": "MIT"
+  "keywords": [
+    "nemoclaw",
+    "openclaw",
+    "memory",
+    "ai-agent",
+    "plugin"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
+  }
 }
