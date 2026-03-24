@@ -1,13 +1,23 @@
 import { cosineSimilarity, embedText } from './embedding.js';
 import { detectCategory, isMemoryWorthy } from './extractor.js';
 
+const DEDUP_THRESHOLD = 0.92;
+
 export class MemoryEngine {
   constructor(store, options = {}) {
     this.store = store;
     this.options = {
       maxRecall: options.maxRecall ?? 8,
       minSimilarity: options.minSimilarity ?? 0.2,
+      dedupThreshold: options.dedupThreshold ?? DEDUP_THRESHOLD,
     };
+  }
+
+  async #isDuplicate(userId, embedding) {
+    const existing = await this.store.listByUser(userId);
+    return existing.some(
+      (m) => cosineSimilarity(embedding, m.embedding) >= this.options.dedupThreshold
+    );
   }
 
   async captureTurn({ userId, sessionId, userMessage, assistantMessage }) {
@@ -15,6 +25,8 @@ export class MemoryEngine {
     const candidates = [userMessage, assistantMessage].filter(Boolean);
     for (const text of candidates) {
       if (!isMemoryWorthy(text)) continue;
+      const embedding = embedText(text);
+      if (await this.#isDuplicate(userId, embedding)) continue;
       const memory = await this.store.insert({
         userId,
         sessionId,
