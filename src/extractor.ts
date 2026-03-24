@@ -6,7 +6,7 @@ const explicitMemoryRegex = /\b(remember (this|that|me)|important:|note that|kee
 // Single-word/short trivial responses to skip
 const trivialPattern = /^(ok|okay|thanks|thank you|cool|nice|yes|no|sure|got it|sounds good|perfect|great|alright|right)[.!?]?$/i;
 
-export function isMemoryWorthy(text) {
+export function isMemoryWorthy(text: string): boolean {
   if (!text || text.trim().length < 12) return false;
   if (trivialPattern.test(text.trim())) return false;
   return (
@@ -17,16 +17,16 @@ export function isMemoryWorthy(text) {
   );
 }
 
-export function detectCategory(text) {
+export function detectCategory(text: string): string {
   if (explicitMemoryRegex.test(text)) {
     // Explicit memory requests: sub-classify if possible, else general
-    if (preferenceRegex.test(text)) return "preference";
-    if (profileRegex.test(text)) return "profile";
-    if (projectRegex.test(text)) return "project";
-    return "general";
+    if (preferenceRegex.test(text)) return 'preference';
+    if (profileRegex.test(text)) return 'profile';
+    if (projectRegex.test(text)) return 'project';
+    return 'general';
   }
-  if (preferenceRegex.test(text)) return "preference";
-  if (profileRegex.test(text)) return "profile";
-  if (projectRegex.test(text)) return "project";
-  return "general";
+  if (preferenceRegex.test(text)) return 'preference';
+  if (profileRegex.test(text)) return 'profile';
+  if (projectRegex.test(text)) return 'project';
+  return 'general';
 }

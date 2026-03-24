@@ -1,10 +1,29 @@
 import { cosineSimilarity, embedText } from './embedding.js';
 import { detectCategory, isMemoryWorthy } from './extractor.js';
+import type { JsonMemoryStore } from './store.js';
+import type { EngineOptions, Memory } from './types.js';
 
 const DEDUP_THRESHOLD = 0.92;
 
+interface RecallOptions {
+  userId: string;
+  query: string;
+  limit?: number;
+}
+
+interface ForgetOptions {
+  memoryId: string;
+}
+
+interface ScoredMemory extends Memory {
+  score: number;
+}
+
 export class MemoryEngine {
-  constructor(store, options = {}) {
+  readonly store: JsonMemoryStore;
+  readonly options: Required<EngineOptions>;
+
+  constructor(store: JsonMemoryStore, options: EngineOptions = {}) {
     this.store = store;
     this.options = {
       maxRecall: options.maxRecall ?? 8,
@@ -13,15 +32,25 @@ export class MemoryEngine {
     };
   }
 
-  async #isDuplicate(userId, embedding) {
+  async #isDuplicate(userId: string, embedding: number[]): Promise<boolean> {
     const existing = await this.store.listByUser(userId);
     return existing.some(
       (m) => cosineSimilarity(embedding, m.embedding) >= this.options.dedupThreshold
     );
   }
 
-  async captureTurn({ userId, sessionId, userMessage, assistantMessage }) {
-    const captured = [];
+  async captureTurn({
+    userId,
+    sessionId,
+    userMessage,
+    assistantMessage,
+  }: {
+    userId: string;
+    sessionId: string;
+    userMessage: string;
+    assistantMessage: string;
+  }): Promise<Memory[]> {
+    const captured: Memory[] = [];
     const candidates = [userMessage, assistantMessage].filter(Boolean);
     for (const text of candidates) {
       if (!isMemoryWorthy(text)) continue;
@@ -38,11 +67,11 @@ export class MemoryEngine {
     return captured;
   }
 
-  async recall({ userId, query, limit = this.options.maxRecall }) {
+  async recall({ userId, query, limit = this.options.maxRecall }: RecallOptions): Promise<ScoredMemory[]> {
     const memories = await this.store.listByUser(userId);
     const queryEmbedding = embedText(query);
     return memories
-      .map((m) => ({
+      .map((m): ScoredMemory => ({
         ...m,
         score: cosineSimilarity(queryEmbedding, m.embedding),
       }))
@@ -51,7 +80,7 @@ export class MemoryEngine {
       .slice(0, limit);
   }
 
-  async forget({ memoryId }) {
+  async forget({ memoryId }: ForgetOptions): Promise<number> {
     return this.store.removeById(memoryId);
   }
 }
